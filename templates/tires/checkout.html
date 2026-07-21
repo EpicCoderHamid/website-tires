@@ -1,0 +1,190 @@
+{% extends 'tires/base.html' %}
+{% load static %}
+
+{% block title %}Checkout - TireShop{% endblock %}
+
+{% block content %}
+<style>
+/* small local styles to improve spacing for payment options */
+.checkout-payment .form-check {
+    margin-bottom: 0.6rem;
+    padding-left: 0;
+}
+.checkout-payment .form-check-input {
+    margin-top: 0.15rem; /* align vertically with label text */
+}
+.checkout-payment .form-check-label {
+    margin-left: 0.5rem;
+}
+</style>
+
+<div class="row">
+    <div class="col-md-8">
+
+        <h2 class="mb-4">Checkout</h2>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Unit</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart.items.all %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.tire.brand.name }} {{ item.tire.name }}</strong><br>
+                                <small class="text-muted">{{ item.tire.get_tire_size }}</small>
+                            </td>
+                            <td>${{ item.tire.price }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td><strong>${{ item.total_price }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-primary">
+                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                            <td><strong>${{ cart.total_price }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Shipping:</strong></td>
+                            <td class="text-success"><strong>FREE</strong></td>
+                        </tr>
+                        <tr class="table-success">
+                            <td colspan="3" class="text-end"><h5>Total:</h5></td>
+                            <td><h5>${{ cart.total_price }}</h5></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- STEP 1: CUSTOMER DETAILS -->
+        {% if step == 'customer_details' %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Customer Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% for field in customer_form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% if field.errors %}
+                        <div class="text-danger small">
+                            {{ field.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <button type="submit" name="customer_details" class="btn btn-primary btn-lg w-100">
+                        Continue to Payment
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+
+        <!-- STEP 2: PAYMENT METHOD -->
+        {% if step == 'payment' %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Payment Method</h5>
+            </div>
+            <div class="card-body">
+
+                <div class="alert alert-info">
+                    <strong>Review your details:</strong><br>
+                    {{ customer_form.customer_name.value }} <br>
+                    {{ customer_form.customer_email.value }} <br>
+                    {{ customer_form.customer_city.value }}
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="step" value="payment">
+
+                    <div class="mb-3 checkout-payment">
+                        <label class="form-label d-block">Select Payment Method</label>
+
+                        {# If payment_form.payment_method is a RadioSelect, iterate and render each option with Bootstrap classes #}
+                        {% if payment_form.payment_method %}
+                            {% for option in payment_form.payment_method %}
+                                <div class="form-check">
+                                    {# option.tag renders the <input type="radio"> element #}
+                                    {{ option.tag|safe }}
+                                    {# option.choice_label and option.id_for_label available on subwidgets #}
+                                    <label class="form-check-label" for="{{ option.id_for_label }}">
+                                        {{ option.choice_label }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            {# fallback: render the field as-is #}
+                            <div>
+                                {{ payment_form.payment_method }}
+                            </div>
+                        {% endif %}
+
+                        {% if payment_form.payment_method.errors %}
+                        <div class="text-danger small mt-1">{{ payment_form.payment_method.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" name="submit_payment" class="btn btn-success btn-lg w-100">
+                        Place Order
+                    </button>
+
+                    <a href="{% url 'checkout' %}" class="btn btn-secondary w-100 mt-2">← Back</a>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Order Details</h5></div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Items ({{ cart.total_items }}):</span>
+                    <span>${{ cart.total_price }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Shipping:</span>
+                    <span class="text-success">FREE</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
+                    <strong>Total:</strong>
+                    <strong>${{ cart.total_price }}</strong>
+                </div>
+
+                <div class="alert alert-info small">
+                    Your order will be processed within 24 hours.<br>
+                    Free shipping on all orders.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

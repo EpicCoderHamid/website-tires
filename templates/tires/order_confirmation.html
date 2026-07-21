@@ -1,0 +1,70 @@
+{% extends 'tires/base.html' %}
+{% block title %}Order Confirmation - {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3>Thank you! Your order is placed.</h3>
+                <p class="lead">Order number: <strong>{{ order.order_number }}</strong></p>
+                <p>Status: <strong>{{ order.status }}</strong></p>
+
+                <h5 class="mt-4">Shipping to</h5>
+                <p>
+                    {{ order.customer_name }}<br>
+                    {{ order.shipping_address }}<br>
+                    {{ order.customer_city }}<br>
+                    {{ order.customer_email }}
+                </p>
+
+                <h5 class="mt-4">Items</h5>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Unit</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td>{{ item.tire.brand.name }} {{ item.tire.name }}</td>
+                            <td>${{ item.price }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>${{ item.total_price }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between">
+                    <div></div>
+                    <div>
+                        <h4>Total: ${{ order.total_amount }}</h4>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{% url 'home' %}" class="btn btn-primary">Continue Shopping</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'order_list' %}" class="btn btn-outline-secondary">My Orders</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6>Order details</h6>
+                <p>Placed on: {{ order.created_at }}</p>
+                <p>Payment: {{ order.payment_method|default:"Not specified" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

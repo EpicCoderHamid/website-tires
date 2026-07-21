@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load filters %}
+
+{% block title %}Order {{ order.order_number }} - TireShop{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <h2 class="mb-4">Order <strong>{{ order.order_number }}</strong></h2>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="mb-1"><strong>Placed on:</strong> {{ order.created_at|date:"M d, Y H:i" }}</p>
+            <p class="mb-1"><strong>Payment method:</strong> {{ order.payment_method|default:"Not specified" }}</p>
+            <p class="mb-1"><strong>Status:</strong>
+              <span class="badge
+                {% if order.status == 'pending' %}bg-secondary
+                {% elif order.status == 'confirmed' %}bg-info
+                {% elif order.status == 'shipped' %}bg-primary
+                {% elif order.status == 'delivered' %}bg-success
+                {% elif order.status == 'cancelled' %}bg-danger
+                {% else %}bg-light text-dark{% endif %}">
+                {{ order.get_status_display }}
+              </span>
+            </p>
+          </div>
+
+          <div class="text-end">
+            <p class="mb-1"><strong>Total:</strong></p>
+            <h4 class="mb-0">${{ order.total_amount }}</h4>
+            {% if user.is_staff %}
+              <div class="mt-3">
+                <a href="{% url 'admin:mainapp_order_change' order.id %}" class="btn btn-sm btn-outline-primary">Edit in Admin</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shipping & Customer Info -->
+    <div class="card mb-3">
+      <div class="card-header"><strong>Shipping & Customer</strong></div>
+      <div class="card-body">
+        <p class="mb-1"><strong>Name:</strong> {{ order.customer_name|default:"-" }}</p>
+        <p class="mb-1"><strong>Email:</strong> {{ order.customer_email|default:"-" }}</p>
+        <p class="mb-1"><strong>Phone:</strong> {{ order.customer_phone|default:"-" }}</p>
+        <p class="mb-1"><strong>City:</strong> {{ order.customer_city|default:"-" }}</p>
+        <p class="mb-1"><strong>Shipping address:</strong><br>
+          {{ order.shipping_address|linebreaksbr|default:"-" }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="card mb-3">
+      <div class="card-header"><strong>Items</strong></div>
+      <div class="card-body p-0">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Unit</th>
+              <th>Qty</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items.all %}
+            <tr>
+              <td>
+                <strong>{{ item.tire.brand.name }} {{ item.tire.name }}</strong><br>
+                <small class="text-muted">{{ item.tire.get_tire_size }}</small>
+              </td>
+              <td>${{ item.price }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>${{ item.total_price }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center"><em>No items in this order.</em></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Notes / Actions -->
+    <div class="card mb-4">
+      <div class="card-body">
+        {% if order.status == 'pending' %}
+          <div class="alert alert-warning mb-3">This order is pending. You will be notified when the status changes.</div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+          <a href="{% url 'home' %}" class="btn btn-outline-secondary">Continue Shopping</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'order_list' %}" class="btn btn-light">My Orders</a>
+          {% endif %}
+          {% if user.is_staff %}
+            <a href="{% url 'admin:mainapp_order_change' order.id %}" class="btn btn-primary">Update Status</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar: Order summary & timeline -->
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-header"><strong>Order Summary</strong></div>
+      <div class="card-body">
+        <p class="mb-1">Items: <strong>{{ order.items.count }}</strong></p>
+        <p class="mb-1">Subtotal: <strong>${{ order.total_amount }}</strong></p>
+        <p class="mb-1">Shipping: <strong class="text-success">FREE</strong></p>
+        <hr>
+        <p class="text-end mb-0"><strong>Total: ${{ order.total_amount }}</strong></p>
+      </div>
+    </div>
+
+    <!-- Status timeline (simple) -->
+    <div class="card">
+      <div class="card-header"><strong>Tracking</strong></div>
+      <div class="card-body">
+        <ul class="list-unstyled">
+          {% for code,label in order.STATUS_CHOICES %}
+            <li class="mb-2 d-flex align-items-start">
+              <div style="width:14px; height:14px; border-radius:50%; margin-right:10px;"
+                   class="{% if forloop.counter0 <= order.STATUS_CHOICES|pluck:0.index:order.status %}bg-success{% else %}bg-secondary{% endif %}">
+              </div>
+              <div>
+                <strong>{{ label }}</strong>
+                {% if code == order.status %} <div class="small text-muted">Current</div>{% endif %}
+              </div>
+            </li>
+          {% endfor %}
+          <!-- fallback simple display -->
+          <li class="mt-3"><small class="text-muted">Current status: <strong>{{ order.get_status_display }}</strong></small></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

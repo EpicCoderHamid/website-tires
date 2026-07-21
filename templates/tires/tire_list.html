@@ -1,0 +1,127 @@
+{% extends 'tires/base.html' %}
+{% load static %}
+
+{% block title %}All Tires - TireShop{% endblock %}
+
+{% block content %}
+<h2>All Tires</h2>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Filters</h5>
+                <form method="get">
+                    <div class="mb-3">
+                        <label class="form-label">Brand</label>
+                        <select name="brand" class="form-select">
+                            <option value="">All Brands</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.name }}" {% if request.GET.brand == brand.name %}selected{% endif %}>
+                                {{ brand.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Rim Size</label>
+                        <select name="rim_size" class="form-select">
+                            <option value="">All Sizes</option>
+                            {% for size in rim_sizes %}
+                            <option value="{{ size }}" {% if request.GET.rim_size == size|stringformat:"s" %}selected{% endif %}>
+                                {{ size }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tire Type</label>
+                        <select name="tire_type" class="form-select">
+                            <option value="">All Types</option>
+                            {% for type_code, type_name in TIRE_TYPES %}
+                            <option value="{{ type_code }}" {% if request.GET.tire_type == type_code %}selected{% endif %}>
+                                {{ type_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    <a href="{% url 'tire_list' %}" class="btn btn-secondary w-100 mt-2">Reset</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Available Tires</h4>
+            <span class="text-muted">{{ tires.count }} tires found</span>
+        </div>
+        
+        <div class="row">
+            {% for tire in tires %}
+            <div class="col-md-4 mb-4">
+                <div class="card tire-card h-100">
+
+                    <!-- FIX: Real tire image with fallback -->
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                         style="height: 200px; overflow: hidden;">
+                        {% if tire.image %}
+                            <img src="{{ tire.image.url }}"
+                                 alt="{{ tire.brand.name }} {{ tire.name }}"
+                                 class="w-100 h-100"
+                                 style="object-fit: contain;">
+                        {% else %}
+                            <img src="{% static 'images/placeholder-tire.png' %}"
+                                 alt="No Image"
+                                 class="w-100 h-100"
+                                 style="object-fit: contain;">
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ tire.brand.name }} {{ tire.name }}</h5>
+                        <p class="card-text">{{ tire.get_tire_size }} - {{ tire.get_tire_type_display }}</p>
+                        <p class="card-text"><strong class="text-primary">${{ tire.price }}</strong></p>
+
+                        <p class="card-text">
+                            {% if tire.stock_quantity > 10 %}
+                                <span class="badge bg-success">In Stock</span>
+                            {% elif tire.stock_quantity > 0 %}
+                                <span class="badge bg-warning text-dark">Only {{ tire.stock_quantity }} left</span>
+                            {% else %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% endif %}
+                        </p>
+
+                        <div class="mt-auto">
+                            <!-- Everyone always sees "View Details" -->
+                            <a href="{% url 'tire_detail' tire.id %}" class="btn btn-primary btn-sm w-100 mb-2">View Details</a>
+
+                            <!-- UPDATED: Show "Add to Cart" to EVERYONE if stock is available -->
+                            {% if tire.stock_quantity > 0 %}
+                                <form method="post" action="{% url 'add_to_cart' tire.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm w-100">Add to Cart</button>
+                                </form>
+                            {% endif %}
+                            <!-- If out of stock, only "View Details" shows -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <h5>No tires found</h5>
+                    <p class="mb-0">No tires match your current filters. Try adjusting your search criteria.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

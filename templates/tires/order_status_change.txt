@@ -1,0 +1,11 @@
+Hi {{ customer_name }},
+
+Your order {{ order_id }} status has changed.
+
+Previous status: {{ previous_status }}
+Current status: {{ current_status }}
+
+Order total: ${{ order_total }}
+
+Thanks,
+TireShop

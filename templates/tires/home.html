@@ -1,0 +1,86 @@
+{% extends 'tires/base.html' %}
+
+{% block title %}Home - TireShop{% endblock %}
+
+{% block content %}
+<div class="hero-section rounded">
+    <div class="container text-center">
+        <h1 class="display-4">Find Perfect Tires for Your Vehicle</h1>
+        <p class="lead">50+ car models supported • 20+ tire brands • Best prices guaranteed</p>
+        <a href="{% url 'find_tires_by_car' %}" class="btn btn-light btn-lg me-2">Find Tires by Car</a>
+        <a href="{% url 'tire_list' %}" class="btn btn-outline-light btn-lg">Browse All Tires</a>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-8 mx-auto">
+        <h3 class="text-center mb-4">Find Tires by Car Model</h3>
+        <form method="get" action="{% url 'find_tires_by_car' %}" class="card">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" name="car_brand" class="form-control" placeholder="Brand (e.g., Honda)" required>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" name="car_model" class="form-control" placeholder="Model (e.g., City)" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" name="year" class="form-control" placeholder="Year" min="1990" max="2024" required>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary w-100">Find</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if featured_tires %}
+<h3>Featured Tires</h3>
+<div class="row">
+    {% for tire in featured_tires %}
+    <div class="col-md-3 mb-4">
+        <div class="card tire-card h-100">
+
+            {# ------- SHOW TIRE IMAGE HERE ------- #}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                 style="height: 180px; overflow: hidden;">
+                {% if tire.image %}
+                    <img src="{{ tire.image.url }}"
+                         alt="{{ tire.brand.name }} {{ tire.name }}"
+                         class="img-fluid"
+                         style="max-height: 100%; object-fit: contain;">
+                {% else %}
+                    <span class="text-muted">No Image Available</span>
+                {% endif %}
+            </div>
+            {# ----------------------------------- #}
+
+            <div class="card-body">
+                <h5 class="card-title">{{ tire.brand.name }} {{ tire.name }}</h5>
+                <p class="card-text">{{ tire.get_tire_size }} - {{ tire.get_tire_type_display }}</p>
+                <p class="card-text"><strong>${{ tire.price }}</strong></p>
+                <a href="{% url 'tire_detail' tire.id %}" class="btn btn-primary btn-sm">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if brands %}
+<h3>Popular Brands</h3>
+<div class="row">
+    {% for brand in brands %}
+    <div class="col-md-2 mb-3">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <h6 class="card-title mb-0">{{ brand.name }}</h6>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

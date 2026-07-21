@@ -1,0 +1,125 @@
+{% extends 'tires/base.html' %}
+
+{% block title %}{{ tire.brand.name }} {{ tire.name }} - TireShop{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- FIX 1: Added mobile-responsive column classes -->
+    <div class="col-12 col-md-6 mb-3 mb-md-0">
+        <div class="card">
+            <div class="card-body text-center">
+                <!-- FIX 2: Reduced image height for mobile -->
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                     style="height: 250px; overflow:hidden;">
+                    {% if tire.image %}
+                        <img src="{{ tire.image.url }}" 
+                             alt="{{ tire.brand.name }} {{ tire.name }}" 
+                             class="img-fluid"
+                             style="max-height: 100%; object-fit: contain;">
+                    {% else %}
+                        <span class="text-muted">No Image Available</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6">
+        <!-- FIX 3: Smaller heading on mobile -->
+        <h2 class="h4 mb-3">{{ tire.brand.name }} {{ tire.name }}</h2>
+        <p class="mb-2"><strong>Size:</strong> {{ tire.get_tire_size }}</p>
+        <p class="mb-2"><strong>Type:</strong> {{ tire.get_tire_type_display }}</p>
+        <p class="mb-2"><strong>Price:</strong> <span class="text-primary">${{ tire.price }}</span></p>
+        
+        <!-- FIX 4: Better stock display -->
+        <p class="mb-3">
+            <strong>Stock:</strong> 
+            {% if tire.stock_quantity > 10 %}
+                <span class="badge bg-success">In Stock</span>
+            {% elif tire.stock_quantity > 0 %}
+                <span class="badge bg-warning text-dark">Low Stock ({{ tire.stock_quantity }})</span>
+            {% else %}
+                <span class="badge bg-danger">Out of Stock</span>
+            {% endif %}
+        </p>
+        
+        <p class="mb-4">{{ tire.description }}</p>
+        
+        <!-- FIX 5: REMOVED auth check + Mobile-optimized Add to Cart form -->
+        {% if tire.stock_quantity > 0 %}
+        <form method="post" action="{% url 'add_to_cart' tire.id %}" class="mb-4">
+            {% csrf_token %}
+            <div class="row g-2">
+                <!-- FIX 6: Mobile-responsive columns -->
+                <div class="col-6 col-md-4">
+                    <input type="number" 
+                           name="quantity" 
+                           value="1" 
+                           min="1" 
+                           max="{{ tire.stock_quantity }}" 
+                           class="form-control form-control-sm"
+                           style="height: 38px;">  <!-- Fixed height for alignment -->
+                </div>
+                <div class="col-6 col-md-8">
+                    <button type="submit" 
+                            class="btn btn-success w-100"
+                            style="height: 38px; font-size: 0.9rem;">  <!-- Fixed height -->
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if compatible_cars %}
+<div class="mt-4">
+    <h4>Compatible Cars</h4>
+    <div class="row">
+        {% for car in compatible_cars %}
+        <!-- FIX 7: Mobile-responsive for compatible cars -->
+        <div class="col-6 col-md-3 mb-2">
+            <div class="card h-100">
+                <div class="card-body py-2 d-flex align-items-center">
+                    <small class="text-center w-100">
+                        {{ car.brand.name }} {{ car.name }}<br>
+                        <span class="text-muted">{{ car.year }}</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if similar_tires %}
+<div class="mt-4">
+    <h4>Similar Tires</h4>
+    <div class="row">
+        <!-- FIX 8: Changed variable name to avoid conflict -->
+        {% for similar_tire in similar_tires %}
+        <!-- FIX 9: Mobile-responsive columns -->
+        <div class="col-6 col-md-3 mb-4">
+            <div class="card tire-card h-100">
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title" style="font-size: 0.9rem;">
+                        {{ similar_tire.brand.name }} {{ similar_tire.name }}
+                    </h6>
+                    <p class="card-text small mb-1">{{ similar_tire.get_tire_size }}</p>
+                    <p class="card-text mb-3"><strong>${{ similar_tire.price }}</strong></p>
+                    
+                    <!-- FIX 10: Fixed button at bottom -->
+                    <div class="mt-auto">
+                        <a href="{% url 'tire_detail' similar_tire.id %}" 
+                           class="btn btn-primary btn-sm w-100">View</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

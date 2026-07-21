@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tire Shop{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom Variables - Updated Color Scheme */
+        :root {
+            --primary-color: #1e3a8a; /* Dark Blue */
+            --secondary-color: #dc2626; /* Red */
+            --accent-color: #60a5fa; /* Light Blue */
+            --dark-color: #000000; /* Black */
+            --light-color: #f8f9fa;
+        }
+
+        /* Prevent content flash during page load */
+        body.loading {
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Car Animation Container - NEW */
+        .car-animation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--dark-color) 0%, var(--primary-color) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .car-animation-container.hide {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .road-container {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .road {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 40px;
+            background: linear-gradient(to right, #4a5568 0%, #4a5568 50%, #718096 50%, #718096 100%);
+            background-size: 30px 100%;
+            animation: roadMove 2s linear infinite;
+        }
+
+        .road-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: repeating-linear-gradient(
+                to right,
+                yellow,
+                yellow 20px,
+                transparent 20px,
+                transparent 40px
+            );
+            transform: translateY(-50%);
+        }
+
+        .car {
+            position: absolute;
+            left: -200px;
+            bottom: 20px;
+            width: 150px;
+            height: 60px;
+            animation: carDrive 3s ease-in-out forwards;
+            z-index: 2;
+        }
+
+        .car-body {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: var(--secondary-color);
+            border-radius: 15px 15px 0 0;
+        }
+
+        .car-top {
+            position: absolute;
+            top: -25px;
+            left: 20px;
+            width: 60px;
+            height: 30px;
+            background: var(--secondary-color);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .car-window {
+            position: absolute;
+            top: -20px;
+            left: 25px;
+            width: 50px;
+            height: 20px;
+            background: var(--accent-color);
+            border-radius: 5px 5px 0 0;
+        }
+
+        .car-wheel {
+            position: absolute;
+            bottom: -10px;
+            width: 25px;
+            height: 25px;
+            background: #000;
+            border-radius: 50%;
+            border: 3px solid #333;
+            animation: wheelSpin 0.5s linear infinite;
+        }
+
+        .car-wheel.front {
+            right: 30px;
+        }
+
+        .car-wheel.back {
+            left: 30px;
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            animation: textPulse 2s infinite;
+            margin-top: 30px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .tire-icon {
+            display: inline-block;
+            animation: tireBounce 1s infinite alternate;
+            color: var(--accent-color);
+        }
+
+        /* Animation Keyframes */
+        @keyframes carDrive {
+            0% {
+                left: -200px;
+                transform: translateY(0);
+            }
+            20% {
+                transform: translateY(-5px);
+            }
+            40% {
+                transform: translateY(0);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+            80% {
+                left: 60%;
+                transform: translateY(0);
+            }
+            100% {
+                left: 120%;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes wheelSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes roadMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-30px); }
+        }
+
+        @keyframes textPulse {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        @keyframes tireBounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            background: linear-gradient(135deg, var(--dark-color) 0%, #1a1a1a 100%) !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 0.75rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.8rem;
+            background: linear-gradient(45deg, var(--accent-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-link {
+            font-weight: 500;
+            margin: 0 0.3rem;
+            padding: 0.5rem 0.8rem !important;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: #f8f9fa !important;
+            white-space: nowrap;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .nav-link:hover::before {
+            left: 100%;
+        }
+
+        .nav-link:hover {
+            background: rgba(220, 38, 38, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            animation: textPulse 2s infinite;
+            box-shadow: 0 0 10px rgba(220,53,69,0.5);
+        }
+
+        /* Main Container - PERFECT LAYOUT */
+        .main-container {
+            min-height: calc(100vh - 200px);
+            padding-top: 80px;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--dark-color) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: 4rem 0;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            border-radius: 0 0 30px 30px;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="%23ffffff" opacity="0.05"><polygon points="1000,100 1000,0 0,100"/></svg>');
+            background-size: cover;
+        }
+
+        /* Card Layout */
+        .tire-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            height: 100%;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .tire-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .tire-card:hover .card-img-top {
+            transform: scale(1.1);
+        }
+
+        /* Buttons - PERFECT LAYOUT */
+        .btn {
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 0.625rem 1.5rem;
+            border: none;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-light {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-light:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        /* Button Groups */
+        .btn-group-perfect {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-group-perfect .btn {
+            flex: 0 1 auto;
+            min-width: 140px;
+        }
+
+        /* Form Controls */
+        .form-control {
+            border-radius: 25px;
+            padding: 0.75rem 1.25rem;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            height: auto;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.25);
+        }
+
+        /* Order Tracking - PERFECT LAYOUT */
+        .track-order-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin: 3rem auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 800px;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .tracking-form-perfect {
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .tracking-form-perfect .form-control {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .tracking-form-perfect .btn {
+            flex: 0 0 auto;
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+
+        /* Alert */
+        .alert {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            animation: slideInDown 0.5s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--dark-color) 0%, #1a1a1a 100%);
+            margin-top: auto;
+            position: relative;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color), var(--primary-color));
+        }
+
+        /* Content Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Page Content */
+        .page-content {
+            animation: fadeInUp 0.8s ease;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, var(--secondary-color), var(--accent-color));
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, var(--accent-color), var(--secondary-color));
+        }
+
+        /* PERFECT RESPONSIVE LAYOUT */
+        
+        /* Extra Large Devices (≥1200px) */
+        @media (min-width: 1200px) {
+            .container {
+                max-width: 1140px;
+            }
+            .hero-section {
+                padding: 6rem 0;
+            }
+            .track-order-section {
+                padding: 3rem;
+            }
+        }
+
+        /* Large Devices (992px - 1199px) */
+        @media (min-width: 992px) and (max-width: 1199px) {
+            .navbar-nav .nav-link {
+                padding: 0.5rem 0.6rem !important;
+                font-size: 0.95rem;
+            }
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* Medium Devices (768px - 991px) */
+        @media (min-width: 768px) and (max-width: 991px) {
+            .navbar-nav {
+                text-align: center;
+                padding: 1rem 0;
+            }
+            .nav-link {
+                display: inline-block;
+                margin: 0.2rem 0.3rem;
+            }
+            .hero-section {
+                padding: 3.5rem 0;
+            }
+            .hero-section h1 {
+                font-size: 2.2rem;
+            }
+            .tracking-form-perfect {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .tracking-form-perfect .btn {
+                width: 100%;
+            }
+        }
+
+        /* Small Devices (576px - 767px) */
+        @media (min-width: 576px) and (max-width: 767px) {
+            .navbar-brand {
+                font-size: 1.5rem;
+            }
+            .hero-section {
+                padding: 3rem 1rem;
+                margin-bottom: 1.5rem;
+                border-radius: 0 0 20px 20px;
+            }
+            .hero-section h1 {
+                font-size: 2rem;
+                text-align: center;
+            }
+            .hero-section p.lead {
+                text-align: center;
+                font-size: 1.1rem;
+            }
+            .btn-group-perfect {
+                justify-content: center;
+            }
+            .btn-group-perfect .btn {
+                min-width: 160px;
+                padding: 0.75rem 1.5rem;
+            }
+            .track-order-section {
+                padding: 2rem;
+                margin: 2rem 1rem;
+            }
+            .car {
+                width: 120px;
+                height: 48px;
+            }
+            .loading-text {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Extra Small Devices (<576px) - PERFECT MOBILE LAYOUT */
+        @media (max-width: 575px) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+            .navbar-brand {
+                font-size: 1.3rem;
+            }
+            .navbar-toggler {
+                padding: 0.25rem 0.5rem;
+                font-size: 1rem;
+            }
+            .main-container {
+                padding-top: 70px;
+            }
+            .hero-section {
+                padding: 2.5rem 1rem;
+                margin-bottom: 1rem;
+                border-radius: 0 0 15px 15px;
+            }
+            .hero-section h1 {
+                font-size: 1.8rem;
+                text-align: center;
+                margin-bottom: 1rem;
+            }
+            .hero-section p.lead {
+                text-align: center;
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+            }
+            .btn-group-perfect {
+                flex-direction: column;
+                width: 100%;
+                gap: 0.75rem;
+            }
+            .btn-group-perfect .btn {
+                width: 100%;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+            }
+            .track-order-section {
+                padding: 1.5rem;
+                margin: 1.5rem 0.75rem;
+                border-radius: 15px;
+            }
+            .tracking-form-perfect {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .tracking-form-perfect .btn {
+                width: 100%;
+                order: 2;
+            }
+            .tracking-form-perfect .form-control {
+                order: 1;
+            }
+            .car-animation-container {
+                padding: 0 1rem;
+            }
+            .road-container {
+                height: 100px;
+                margin-bottom: 30px;
+            }
+            .car {
+                width: 100px;
+                height: 40px;
+                bottom: 15px;
+            }
+            .loading-text {
+                font-size: 1.3rem;
+                margin-top: 20px;
+            }
+            footer {
+                padding: 2rem 1rem;
+            }
+            footer .row > div {
+                margin-bottom: 1.5rem;
+            }
+            footer h5 {
+                font-size: 1.1rem;
+                margin-bottom: 0.75rem;
+            }
+            footer a {
+                display: block;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Very Small Devices (≤350px) */
+        @media (max-width: 350px) {
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            .hero-section h1 {
+                font-size: 1.5rem;
+            }
+            .hero-section p.lead {
+                font-size: 0.9rem;
+            }
+            .btn {
+                padding: 0.625rem 1rem;
+                font-size: 0.9rem;
+            }
+            .track-order-section {
+                padding: 1.25rem;
+                margin: 1rem 0.5rem;
+            }
+            .car {
+                width: 80px;
+                height: 32px;
+            }
+            .loading-text {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Utility Classes */
+        .fade-in {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .text-gradient {
+            background: linear-gradient(45deg, var(--accent-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .shadow-soft {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .shadow-medium {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        /* Ensure images are responsive */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Fix for iOS Safari */
+        @supports (-webkit-touch-callout: none) {
+            .btn {
+                min-height: 44px;
+            }
+            input, select, textarea {
+                font-size: 16px !important; /* Prevents zoom on focus */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Car Loading Animation -->
+    <div class="car-animation-container" id="loadingAnimation">
+        <div class="animation-content">
+            <div class="road-container">
+                <div class="road">
+                    <div class="road-line"></div>
+                </div>
+                <div class="car">
+                    <div class="car-body">
+                        <div class="car-top"></div>
+                        <div class="car-window"></div>
+                        <div class="car-wheel front"></div>
+                        <div class="car-wheel back"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="loading-text">
+                <span class="tire-icon"><i class="fas fa-tire"></i></span>
+                TireShop
+                <span class="tire-icon"><i class="fas fa-tire"></i></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-tire fa-beat" style="--fa-animation-duration: 2s;"></i>  Perfact Tire
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{% url 'home' %}">
+                        <i class="fas fa-home me-1"></i> Home
+                    </a>
+                    <a class="nav-link" href="{% url 'tire_list' %}">
+                        <i class="fas fa-tire me-1"></i> All Tires
+                    </a>
+                    <a class="nav-link" href="{% url 'find_tires_by_car' %}">
+                        <i class="fas fa-car me-1"></i> Find by Car
+                    </a>
+                    <a class="nav-link" href="{% url 'order_search' %}">
+                        <i class="fas fa-truck me-1"></i> Track Order
+                    </a>
+                    
+                    {% if user.is_authenticated %}
+                        <a class="nav-link position-relative" href="{% url 'view_cart' %}">
+                            <i class="fas fa-shopping-cart me-1"></i> Cart
+                            {% if user.cart.total_items > 0 %}
+                                <span class="badge bg-danger cart-badge">{{ user.cart.total_items }}</span>
+                            {% endif %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="container page-content">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show fade-in" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas 
+                                {% if message.tags == 'success' %}fa-check-circle
+                                {% elif message.tags == 'warning' %}fa-exclamation-triangle
+                                {% elif message.tags == 'error' %}fa-times-circle
+                                {% else %}fa-info-circle{% endif %} 
+                                me-2"></i>
+                            {{ message }}
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}
+            <!-- Default content if not overridden -->
+            <div class="hero-section fade-in">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-lg-6 mb-4 mb-lg-0">
+                            <h1 class="display-5 fw-bold mb-3">Premium Tires for Every Journey</h1>
+                            <p class="lead mb-4">Discover our extensive collection of high-quality tires for all vehicles and driving conditions. Safety, performance, and durability guaranteed.</p>
+                            <div class="btn-group-perfect">
+                                <a href="{% url 'tire_list' %}" class="btn btn-light btn-lg">
+                                    <i class="fas fa-shopping-cart me-2"></i>Shop Now
+                                </a>
+                                <a href="{% url 'order_search' %}" class="btn btn-outline-light btn-lg">
+                                    <i class="fas fa-truck me-2"></i>Track Order
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="img-hover-zoom shadow-medium rounded-3">
+                                <img src="https://images.unsplash.com/photo-1696236676248-908783aa3083?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2FyJTIwdGlyZXMlMjBpbWFnZXN8ZW58MHx8MHx8fDA%3D" 
+                                     alt="Premium Tires" 
+                                     class="img-fluid rounded-3"
+                                     loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Tracking Section -->
+            <div class="track-order-section fade-in shadow-soft">
+                <div class="text-center mb-4">
+                    <h2 class="text-gradient mb-3"><i class="fas fa-truck me-2"></i>Track Your Order</h2>
+                    <p class="text-muted mb-0">Enter your order number to check the status of your delivery</p>
+                </div>
+                <form class="tracking-form-perfect" action="{% url 'order_search' %}" method="GET">
+                    <input type="text" 
+                           class="form-control" 
+                           placeholder="Enter your order number" 
+                           name="order_number" 
+                           required
+                           aria-label="Order number">
+                    <button class="btn btn-primary btn-lg" type="submit">
+                        <i class="fas fa-search me-2"></i>Track Order
+                    </button>
+                </form>
+                <div class="text-center mt-4">
+                    <small class="text-muted">
+                        Don't know your order number? 
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'order_list' %}" class="text-primary fw-bold">View your orders</a>
+                        {% else %}
+                            <a href="{% url 'admin:login' %}" class="text-primary fw-bold">Login to view orders</a>
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0 text-center text-lg-start">
+                    <h5 class="mb-3">
+                        <i class="fas fa-tire fa-beat me-2" style="--fa-animation-duration: 3s;"></i>
+                        TireShop
+                    </h5>
+                    <p class="mb-0">Your trusted partner for quality tires and automotive solutions</p>
+                </div>
+                <div class="col-lg-4 mb-4 mb-lg-0 text-center">
+                    <h5 class="mb-3">Quick Links</h5>
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <a href="{% url 'home' %}" class="text-light text-decoration-none">Home</a>
+                        <a href="{% url 'tire_list' %}" class="text-light text-decoration-none">Tires</a>
+                        <a href="{% url 'find_tires_by_car' %}" class="text-light text-decoration-none">Find by Car</a>
+                        <a href="{% url 'order_search' %}" class="text-light text-decoration-none">Track Order</a>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center text-lg-end">
+                    <h5 class="mb-3">Contact Info</h5>
+                    <p class="mb-2">
+                        <i class="fas fa-phone me-2"></i>
+                        <a href="tel:18008473746" class="text-light text-decoration-none">1-800-TIRESHOP</a>
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-envelope me-2"></i>
+                        <a href="mailto:support@tireshop.com" class="text-light text-decoration-none">support@tireshop.com</a>
+                    </p>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="text-center">
+                <p class="mb-0">
+                    &copy; 2025 TireShop. All rights reserved. | 
+                    Built with <i class="fas fa-heart text-danger fa-beat" style="--fa-animation-duration: 2s;"></i>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Car Animation - Show only on first visit
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingAnimation = document.getElementById('loadingAnimation');
+            const body = document.body;
+            
+            // Check if user has seen the animation before using localStorage
+            if (!localStorage.getItem('tireShopAnimationShown')) {
+                // First visit - show animation
+                body.classList.add('loading');
+                loadingAnimation.classList.remove('hide');
+                
+                // Mark as shown in localStorage
+                localStorage.setItem('tireShopAnimationShown', 'true');
+                
+                // Hide animation after car drives off screen
+                setTimeout(function() {
+                    loadingAnimation.classList.add('hide');
+                    body.classList.remove('loading');
+                    
+                    // Remove from DOM after animation completes
+                    setTimeout(function() {
+                        loadingAnimation.style.display = 'none';
+                    }, 800);
+                }, 3000); // Match car animation duration
+            } else {
+                // Returning visitor - hide immediately
+                loadingAnimation.style.display = 'none';
+                body.classList.remove('loading');
+            }
+
+            // Smooth loading for buttons
+            const submitButtons = document.querySelectorAll('form button[type="submit"], .btn-primary');
+            submitButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (!this.classList.contains('disabled')) {
+                        this.classList.add('disabled');
+                        const originalHTML = this.innerHTML;
+                        this.innerHTML = '<span class="loading-spinner"></span> Processing...';
+                        
+                        // Restore after 3 seconds if still disabled (prevents infinite loading)
+                        setTimeout(() => {
+                            if (this.classList.contains('disabled')) {
+                                this.classList.remove('disabled');
+                                this.innerHTML = originalHTML;
+                            }
+                        }, 3000);
+                    }
+                });
+            });
+
+            // Scroll animations
+            const animateElements = function() {
+                const elements = document.querySelectorAll('.fade-in');
+                elements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const elementVisible = 150;
+                    
+                    if (elementTop < window.innerHeight - elementVisible) {
+                        element.style.opacity = "1";
+                        element.style.transform = "translateY(0)";
+                    }
+                });
+            };
+
+            // Initialize animations
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach(element => {
+                element.style.opacity = "0";
+                element.style.transform = "translateY(20px)";
+                element.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+            });
+
+            window.addEventListener('scroll', animateElements);
+            animateElements(); // Initial check
+
+            // Fix for iOS Safari 100vh issue
+            function setVH() {
+                let vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            }
+            setVH();
+            window.addEventListener('resize', setVH);
+
+            // Handle window resize for perfect layout
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    // Re-check animations
+                    animateElements();
+                    // Re-calculate VH
+                    setVH();
+                }, 100);
+            });
+
+            // Add touch feedback for mobile
+            document.addEventListener('touchstart', function() {}, {passive: true});
+        });
+    </script>
+</body>
+</html>

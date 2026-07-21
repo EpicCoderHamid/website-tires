@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}My Orders - TireShop{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <h2 class="mb-4">My Orders</h2>
+
+    {% if orders %}
+      {% for order in orders %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h5 class="mb-1">Order <strong>{{ order.order_number }}</strong></h5>
+              <div class="text-muted small">
+                Placed on: {{ order.created_at|date:"M d, Y H:i" }} •
+                Items: {{ order.items.count }}
+              </div>
+              <p class="mt-2 mb-1">
+                <strong>Ship to:</strong>
+                {% if order.customer_name %}{{ order.customer_name }}{% else %}—{% endif %},
+                {% if order.customer_city %} {{ order.customer_city }}{% endif %}
+              </p>
+            </div>
+
+            <div class="text-end">
+              <div class="mb-2">
+                <span class="badge 
+                  {% if order.status == 'pending' %}bg-secondary
+                  {% elif order.status == 'confirmed' %}bg-info
+                  {% elif order.status == 'shipped' %}bg-primary
+                  {% elif order.status == 'delivered' %}bg-success
+                  {% elif order.status == 'cancelled' %}bg-danger
+                  {% else %}bg-light text-dark{% endif %}">
+                  {{ order.get_status_display }}
+                </span>
+              </div>
+
+              <div class="mb-1">
+                <strong>${{ order.total_amount }}</strong>
+              </div>
+
+              <div>
+                <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                <a href="{% url 'order_tracking' order.id %}" class="btn btn-sm btn-outline-secondary">Track</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Small order items preview -->
+          <div class="mt-3">
+            <small class="text-muted">Items:</small>
+            <ul class="list-inline mb-0">
+              {% for item in order.items.all|slice:":4" %}
+                <li class="list-inline-item me-2">
+                  <span class="small">{{ item.tire.brand.name }} {{ item.tire.name }} (x{{ item.quantity }})</span>
+                </li>
+              {% empty %}
+                <li class="list-inline-item"><em>No items</em></li>
+              {% endfor %}
+              {% if order.items.count > 4 %}
+                <li class="list-inline-item"><small class="text-muted">…(+{{ order.items.count|add:"-4" }} more)</small></li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- Pagination -->
+      <nav aria-label="Orders pagination" class="mt-3">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                &laquo; Prev
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+              <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                Next &raquo;
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+
+    {% else %}
+      <div class="card">
+        <div class="card-body text-center">
+          <p class="lead mb-3">You have no orders yet.</p>
+          <a href="{% url 'tire_list' %}" class="btn btn-primary">Browse Tires</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h6>Orders Help</h6>
+        <p class="small text-muted mb-2">Need assistance with an order? Contact support and include your order number.</p>
+        <a href="mailto:support@tireshop.com" class="btn btn-light btn-sm">Contact Support</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

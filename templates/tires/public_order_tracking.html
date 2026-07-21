@@ -1,0 +1,203 @@
+{% extends 'tires/base.html' %}
+
+{% block title %}Order Tracking - {{ order.order_number }} - TireShop{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Order Tracking</h2>
+            <a href="{% url 'order_search' %}" class="btn btn-outline-primary">
+                <i class="fas fa-search me-1"></i>Track Another Order
+            </a>
+        </div>
+
+        <!-- Order Summary Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Order #{{ order.order_number }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Order Date:</strong> {{ order.created_at|date:"F j, Y g:i A" }}</p>
+                        <p><strong>Customer:</strong> {{ order.customer_name }}</p>
+                        <p><strong>Email:</strong> {{ order.customer_email }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Total Amount:</strong> ${{ order.total_amount }}</p>
+                        <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+                        <p><strong>Current Status:</strong> 
+                            <span class="badge bg-primary fs-6">{{ order.get_status_display_with_icon }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Progress -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Order Progress</h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3" style="height: 12px;">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: {{ order.get_status_progress }}%"
+                         aria-valuenow="{{ order.get_status_progress }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                    </div>
+                </div>
+                
+                <!-- Status Timeline -->
+                <div class="timeline">
+                    {% for step in status_timeline %}
+                    <div class="timeline-item {% if step.status == order.status %}current{% endif %}">
+                        <div class="timeline-marker">
+                            {% if step.status == order.status %}
+                            <div class="timeline-marker-current">●</div>
+                            {% elif order.status == 'delivered' or step.status < order.status %}
+                            <div class="timeline-marker-completed">✓</div>
+                            {% else %}
+                            <div class="timeline-marker-pending">○</div>
+                            {% endif %}
+                        </div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">{{ step.name }}</h6>
+                            <p class="text-muted mb-0">{{ step.description }}</p>
+                            {% if step.status == order.status %}
+                            <small class="text-primary">Current Status</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Order Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.tire.brand.name }} {{ item.tire.name }}</strong><br>
+                                    <small class="text-muted">{{ item.tire.get_tire_size }}</small>
+                                </td>
+                                <td>${{ item.price }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td><strong>${{ item.total_price }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-success">
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Grand Total:</strong></td>
+                                <td><strong>${{ order.total_amount }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipping Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Shipping Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Shipping Address:</strong></p>
+                        <p class="mb-0">{{ order.full_address|linebreaksbr }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        {% if order.tracking_number %}
+                        <p><strong>Tracking Number:</strong><br>
+                            <code class="fs-5">{{ order.tracking_number }}</code>
+                        </p>
+                        {% endif %}
+                        {% if order.estimated_delivery %}
+                        <p><strong>Estimated Delivery:</strong><br>
+                            <span class="text-success">{{ order.estimated_delivery|date:"F j, Y" }}</span>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Support Section -->
+        <div class="alert alert-info mt-4">
+            <h6><i class="fas fa-info-circle me-2"></i>Need Assistance?</h6>
+            <p class="mb-2">If you have any questions about your order, please contact our customer support team.</p>
+            <p class="mb-0">
+                <strong>Phone:</strong> 1-800-TIRESHOP | 
+                <strong>Email:</strong> support@tireshop.com
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline-item {
+    position: relative;
+    padding: 20px 0;
+    border-left: 2px solid #e9ecef;
+}
+.timeline-item:last-child {
+    border-left: 2px solid transparent;
+}
+.timeline-marker {
+    position: absolute;
+    left: -36px;
+    top: 20px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
+    font-weight: bold;
+}
+.timeline-marker-completed {
+    background: #28a745;
+    color: white;
+}
+.timeline-marker-current {
+    background: #007bff;
+    color: white;
+    animation: pulse 2s infinite;
+}
+.timeline-marker-pending {
+    background: #6c757d;
+    color: white;
+}
+.timeline-item.current .timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-left: -15px;
+}
+</style>
+{% endblock %}

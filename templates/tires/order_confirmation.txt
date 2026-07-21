@@ -1,0 +1,11 @@
+Hi {{ customer_name }},
+
+Thank you for your order!
+
+Order number: {{ order_id }}
+Order total: ${{ order_total }}
+
+We will notify you when the order status changes.
+
+Thanks,
+TireShop

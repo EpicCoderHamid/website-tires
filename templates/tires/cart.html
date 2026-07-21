@@ -1,0 +1,119 @@
+{% extends 'tires/base.html' %}
+{% block title %}Your Cart - TireShop{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row g-4">
+
+        <!-- CART ITEMS -->
+        <div class="col-lg-8">
+            <h2 class="mb-3">Your Cart</h2>
+
+            {% if cart and cart.items.all %}
+                {% for item in cart.items.all %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+
+                        <!-- PRODUCT INFO -->
+                        <div class="row align-items-center gy-3">
+                            <div class="col-md-5">
+                                <strong>{{ item.tire.brand.name }} {{ item.tire.name }}</strong>
+                                <div class="text-muted small">{{ item.tire.get_tire_size }}</div>
+                                <div class="mt-1 fw-semibold">${{ item.tire.price }} each</div>
+                            </div>
+
+                            <!-- QUANTITY -->
+                            <div class="col-md-4">
+                                <form method="post" action="{% url 'update_cart_item' item.id %}" class="d-flex gap-2">
+                                    {% csrf_token %}
+                                    <input
+                                        type="number"
+                                        name="quantity"
+                                        value="{{ item.quantity }}"
+                                        min="1"
+                                        max="{{ item.tire.stock_quantity }}"
+                                        class="form-control"
+                                    >
+                                    <button class="btn btn-outline-primary" type="submit">
+                                        Update
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- TOTAL + REMOVE -->
+                            <div class="col-md-3 text-md-end">
+                                <div class="fw-bold mb-2">
+                                    ${{ item.total_price }}
+                                </div>
+                                <form method="post" action="{% url 'remove_from_cart' item.id %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-outline-danger w-100 w-md-auto">
+                                        Remove
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- CART TOTAL -->
+                <div class="text-end mt-4">
+                    <h4>Total: ${{ cart.total_price }}</h4>
+                    <a href="{% url 'checkout' %}" class="btn btn-success btn-lg mt-2">
+                        Proceed to Checkout
+                    </a>
+                </div>
+
+            {% else %}
+                <div class="card text-center p-4">
+                    <p class="lead mb-3">Your cart is empty.</p>
+                    <a href="{% url 'tire_list' %}" class="btn btn-primary">
+                        Browse Tires
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ORDER SUMMARY -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-lg-top" style="top: 20px;">
+                <div class="card-header fw-bold">
+                    Order Summary
+                </div>
+                <div class="card-body">
+                    <p class="d-flex justify-content-between">
+                        <span>Items</span>
+                        <strong>{{ cart.total_items|default:0 }}</strong>
+                    </p>
+                    <p class="d-flex justify-content-between">
+                        <span>Subtotal</span>
+                        <strong>${{ cart.total_price|default:"0.00" }}</strong>
+                    </p>
+                    <p class="d-flex justify-content-between">
+                        <span>Shipping</span>
+                        <strong class="text-success">FREE</strong>
+                    </p>
+                    <hr>
+                    <p class="d-flex justify-content-between fs-5">
+                        <span>Total</span>
+                        <strong>${{ cart.total_price|default:"0.00" }}</strong>
+                    </p>
+                </div>
+            </div>
+
+            <!-- SUPPORT -->
+            <div class="card mt-3">
+                <div class="card-body text-center">
+                    <p class="mb-2">Need help?</p>
+                    <a href="mailto:support@tireshop.com" class="btn btn-light w-100">
+                        Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
